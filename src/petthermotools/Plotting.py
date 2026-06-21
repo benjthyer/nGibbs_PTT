@@ -1183,23 +1183,26 @@ def melts_colors() -> dict:
         'Fl':    'cyan',
     }
 
-def _draw_stack(ax, x_vals: np.ndarray, phase_frame: np.ndarray,
-                phase_names: list, colors: dict, title: str,
+def _draw_stack(ax, x_vals: np.ndarray, mass_df,
+                title: str, colors: dict = melts_colors(),
                 x_name: str = 'X') -> None:
     """Draw one stacked-area frame onto *ax*.
 
     Parameters
     ----------
-    x_vals      : (Nx,) x-axis coordinates
-    phase_frame : (Nx, P) phase fractions for this frame — columns match phase_names
-    phase_names : length-P phase label strings (also used as color-dict keys)
-    colors      : mapping phase name → matplotlib color
-    title       : axes title for this frame
-    x_name      : x-axis label
+    x_vals  : (Nx,) x-axis coordinates
+    mass_df : DataFrame from Results['mass_g'] — rows are steps, columns are phase names
+    colors  : mapping display name → matplotlib color
+    title   : axes title for this frame
+    x_name  : x-axis label
     """
-   
+
     x_vals = np.asarray(x_vals, dtype=np.float32).ravel()
-    phase_frame = np.asarray(phase_frame, dtype=np.float32)
+    phase_names = list(mass_df.columns)
+    phase_frame = np.asarray(mass_df.values, dtype=np.float32)
+    row_totals = phase_frame.sum(axis=1, keepdims=True)
+    row_totals = np.where(row_totals == 0, 1.0, row_totals)
+    phase_frame = phase_frame / row_totals
 
     # Translate internal names to display abbreviations (MELTS then MAGEMin)
     _all_names = {**Names, **Names_MM}

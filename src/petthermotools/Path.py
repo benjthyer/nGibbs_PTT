@@ -146,6 +146,29 @@ def multi_path(cores = None, Model = None, bulk = None, comp = None, Frac_solid 
     CO2_Liq    = check_array(CO2_Liq)
     fO2_offset = check_array(fO2_offset)
 
+    ## add check to ensure that there arn't multiple lists provided with different lengths
+    l = []
+    for item in [Fe3Fet_init,Fe3Fet_Liq,H2O_init,H2O_Liq,CO2_init,CO2_Liq,fO2_offset,P_bar,P_start_bar, P_end_bar, dp_bar, T_C, T_start_C, T_end_C, dt_C]:
+        if type(item) == np.ndarray:
+            l.append(len(item))
+
+    if type(comp) == pd.core.frame.DataFrame:
+        l.append(len(comp))
+
+    if len(l) > 1:
+        if len(set(l))>1:
+            raise ValueError("Error: non-identical length in provided conditions. \nPlease check lists or arrays are the same length and/or specify single values.")
+
+    if len(l) == 0:
+        ln = 1
+    else:
+        ln = l[0]
+
+    # check label is allowed
+    if label is not None:
+        if label not in ["CO2", "CO2_init", "pressure", "P", "P_bar", "P_start_bar", "fO2", "fO2_offset", "H2O", "H2O_init", "Fe3Fet", "Fe3Fet_init"]:
+            raise ValueError(f"Do not recognise the label chosen. Availabily labels are {['CO2', 'CO2_init', 'pressure', 'P', 'P_bar', 'P_start_bar', 'fO2', 'fO2_offset', 'H2O', 'H2O_init', 'Fe3Fet', 'Fe3Fet_init']}")
+
     # Resolve bulk→comp alias and set default Model before any routing.
     if bulk is not None:
         comp = bulk.copy()
@@ -182,29 +205,6 @@ def multi_path(cores = None, Model = None, bulk = None, comp = None, Frac_solid 
                fO2_buffer = fO2_buffer, fO2_offset = fO2_offset,
                Print_suppress = Print_suppress, fluid_sat = fluid_sat, Crystallinity_limit = Crystallinity_limit, Combined = Combined,
                label = label, Suppress = Suppress, Suppress_except=Suppress_except)
-
-    ## add check to ensure that there arn't multiple lists provided with different lengths
-    l = []
-    for item in [Fe3Fet_init,Fe3Fet_Liq,H2O_init,H2O_Liq,CO2_init,CO2_Liq,fO2_offset,P_bar,P_start_bar, P_end_bar, dp_bar, T_C, T_start_C, T_end_C, dt_C]:
-        if type(item) == np.ndarray:
-            l.append(len(item))
-
-    if type(comp) == pd.core.frame.DataFrame:
-        l.append(len(comp))
-
-    if len(l) > 1:
-        if len(set(l))>1:
-            raise ValueError("Error: non-identical length in provided conditions. \nPlease check lists or arrays are the same length and/or specify single values.")
-
-    if len(l) == 0:
-        ln = 1
-    else:
-        ln = l[0]
-
-    # check label is allowed
-    if label is not None:
-        if label not in ["CO2", "CO2_init", "pressure", "P", "P_bar", "P_start_bar", "fO2", "fO2_offset", "H2O", "H2O_init", "Fe3Fet", "Fe3Fet_init"]:
-            raise ValueError(f"Do not recognise the label chosen. Availabily labels are {['CO2', 'CO2_init', 'pressure', 'P', 'P_bar', 'P_start_bar', 'fO2', 'fO2_offset', 'H2O', 'H2O_init', 'Fe3Fet', 'Fe3Fet_init']}")
 
     # make sure a timeout is specified
     if timeout is None:
